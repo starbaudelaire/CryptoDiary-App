@@ -5,6 +5,6 @@
 __pycache__/
 *.pyc
 
-# Kalo lu pake virtual environment
+# Virtual Environment
 .venv/
 venv/
