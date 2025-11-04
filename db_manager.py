@@ -116,6 +116,37 @@ def get_diary_entries(user_id):
         print(f"Gagal mengambil catatan: {e}")
         return []
 
+def update_diary_entry(entry_id, title_blob, content_blob, nonce, tag):
+    """Mengupdate entry diary yang sudah ada."""
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            UPDATE diary_entries 
+            SET title = ?, content = ?, nonce = ?, tag = ?, timestamp = CURRENT_TIMESTAMP
+            WHERE id = ?
+            """,
+            (title_blob, content_blob, nonce, tag, entry_id)
+        )
+        conn.commit()
+        conn.close()
+        return True, "Catatan berhasil diupdate."
+    except Exception as e:
+        return False, f"Gagal mengupdate catatan: {e}"
+
+def delete_diary_entry(entry_id):
+    """Menghapus entry diary berdasarkan ID-nya."""
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM diary_entries WHERE id = ?", (entry_id,))
+        conn.commit()
+        conn.close()
+        return True, "Catatan berhasil dihapus."
+    except Exception as e:
+        return False, f"Gagal menghapus catatan: {e}"
+
 # --- Tes Sederhana (opsional, bisa dihapus nanti) ---
 if __name__ == "__main__":
     init_db() 

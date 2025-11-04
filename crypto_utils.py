@@ -61,65 +61,60 @@ def derive_key(password, salt, iterations=100000):
 
 # --- BAGIAN 2: AES (untuk Database Diary) ---
 
-def encrypt_aes_gcm(plaintext_str, key):
+# HAPUS encrypt_aes_gcm LAMA, GANTI DENGAN INI:
+def encrypt_aes_gcm_entry(title_str, content_str, key):
     """
-    Enkripsi data (string) menggunakan AES-GCM dengan key 256-bit (32 bytes).
-    Mengembalikan tuple: (ciphertext_bytes, nonce_bytes, tag_bytes)
+    Enkripsi Title dan Content (string) pakai SATU cipher object.
+    Mengembalikan tuple: (title_bytes, content_bytes, nonce_bytes, tag_bytes)
     """
     try:
-        # 1. Ubah plaintext (string) jadi bytes
-        plaintext_bytes = plaintext_str.encode('utf-8')
+        # 1. Ubah DULU semua string jadi bytes
+        title_bytes = title_str.encode('utf-8')
+        content_bytes = content_str.encode('utf-8')
         
-        # 2. Buat cipher AES baru pake mode GCM dan key yg kita punya
-        # AES.new() butuh key, mode, dan nonce (atau biarin random)
+        # 2. Buat SATU cipher. Ini akan nge-generate SATU nonce
         cipher = AES.new(key, AES.MODE_GCM)
-        
-        # 3. Lakukan enkripsi. 
-        #    Fungsi .encrypt_and_digest() ini keren, 
-        #    dia sekaligus enkrip DAN ngitung 'tag' autentikasi.
-        ciphertext, tag = cipher.encrypt_and_digest(plaintext_bytes)
-        
-        # 4. Ambil nonce yg tadi di-generate otomatis sama cipher-nya
         nonce = cipher.nonce
         
-        # 5. Kembalikan semua yg dibutuhkan untuk dekripsi nanti
-        #    ciphertext: data terenkripsi
-        #    nonce: 'kunci' acak biar enkripsi beda terus (WAJIB DISIMPAN)
-        #    tag: 'segel' digital untuk buktiin data nggak diubah (WAJIB DISIMPAN)
-        return (ciphertext, nonce, tag)
+        # 3. Enkripsi keduanya secara berurutan
+        title_blob = cipher.encrypt(title_bytes)
+        content_blob = cipher.encrypt(content_bytes)
+        
+        # 4. Ambil SATU tag untuk *seluruh* operasi
+        tag = cipher.digest()
+        
+        return (title_blob, content_blob, nonce, tag)
         
     except Exception as e:
         print(f"Error enkripsi AES: {e}")
-        return (None, None, None)
+        return (None, None, None, None)
 
-def decrypt_aes_gcm(ciphertext_bytes, key, nonce_bytes, tag_bytes):
+# HAPUS decrypt_aes_gcm LAMA, GANTI DENGAN INI:
+def decrypt_aes_gcm_entry(title_bytes, content_bytes, key, nonce_bytes, tag_bytes):
     """
-    Dekripsi data (bytes) menggunakan AES-GCM.
-    Fungsi ini akan VERIFIKASI 'tag' dulu sebelum dekripsi.
-    Mengembalikan: plaintext (string) atau None jika gagal (misal data korup/diubah)
+    Dekripsi Title dan Content (bytes) pakai SATU cipher object dan VERIFIKASI.
+    Mengembalikan tuple: (title_str, content_str) atau (None, None)
     """
     try:
-        # 1. Buat ulang cipher-nya, kali ini HARUS pake key DAN nonce yg sama
+        # 1. Buat ulang cipher-nya PAKE nonce yg tersimpan
         cipher = AES.new(key, AES.MODE_GCM, nonce=nonce_bytes)
         
-        # 2. Lakukan dekripsi DAN verifikasi.
-        #    Fungsi .decrypt_and_verify() ini yang ngecek 'tag'.
-        #    Kalo tag-nya beda (artinya ciphertext atau tag-nya diubah),
-        #    dia bakal otomatis raise ValueError. Aman.
-        plaintext_bytes = cipher.decrypt_and_verify(ciphertext_bytes, tag_bytes)
+        # 2. Dekripsi keduanya
+        title_str = cipher.decrypt(title_bytes).decode('utf-8')
+        content_str = cipher.decrypt(content_bytes).decode('utf-8')
         
-        # 3. Ubah hasil dekripsi (bytes) jadi string lagi
-        plaintext_str = plaintext_bytes.decode('utf-8')
+        # 3. VERIFIKASI tag-nya di akhir
+        #    Kalo tag salah, ini bakal 'raise ValueError'
+        cipher.verify(tag_bytes)
         
-        return plaintext_str
+        return (title_str, content_str)
         
     except (ValueError, KeyError) as e:
-        # Ini error kalo verifikasi tag gagal.
-        print(f"Error dekripsi/verifikasi AES: Data mungkin korup atau diubah! {e}")
-        return None
+        print(f"Error dekripsi/verifikasi AES: Data korup atau tag salah! {e}")
+        return (None, None)
     except Exception as e:
         print(f"Error dekripsi AES: {e}")
-        return None
+        return (None, None)
 
 # ...(kode dari Bagian 1 & 2 ada di atas sini)...
 

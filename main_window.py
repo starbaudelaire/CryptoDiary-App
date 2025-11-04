@@ -77,9 +77,9 @@ class DiaryTabWidget(QWidget):
         for entry in entries:
             entry_id, title_blob, content_blob, nonce, tag, timestamp = entry
             
-            title_plain = crypto_utils.decrypt_aes_gcm(
-                title_blob, self.master_key, nonce, tag
-            )
+            (title_plain, _) = crypto_utils.decrypt_aes_gcm_entry(
+    title_blob, content_blob, self.master_key, nonce, tag
+)
             
             if title_plain:
                 list_item = QListWidgetItem(f"{timestamp} - {title_plain}")
@@ -95,9 +95,9 @@ class DiaryTabWidget(QWidget):
         entry_id, title_blob, content_blob, nonce, tag, timestamp = entry_data
         self.current_entry_id = entry_id # Simpan ID untuk fungsi delete
 
-        title_plain = crypto_utils.decrypt_aes_gcm(
-            title_blob, self.master_key, nonce, tag
-        )
+        (title_plain, content_plain) = crypto_utils.decrypt_aes_gcm_entry(
+    title_blob, content_blob, self.master_key, nonce, tag
+)
         content_plain = crypto_utils.decrypt_aes_gcm(
             content_blob, self.master_key, nonce, tag
         )
@@ -121,12 +121,14 @@ class DiaryTabWidget(QWidget):
             QMessageBox.warning(self, "Error", "Judul dan Isi tidak boleh kosong.")
             return
 
-        title_blob, nonce, tag = crypto_utils.encrypt_aes_gcm(title, self.master_key)
-        content_blob, _, _ = crypto_utils.encrypt_aes_gcm(content, self.master_key) # Nonce-nya bakal beda, kita cuma ambil ciphertext
-        
-        # Kita menggunakan nonce dan tag dari enkripsi judul untuk keseluruhan entry.
-        # Ini adalah penyederhanaan. Dalam aplikasi high-security, setiap bagian mungkin punya nonce/tag sendiri.
-        success, msg = db_manager.save_diary_entry(self.user_id, title_blob, content_blob, nonce, tag)
+        (title_blob, content_blob, nonce, tag) = crypto_utils.encrypt_aes_gcm_entry(
+    title, content, self.master_key)
+
+        if title_blob is not None:
+          success, msg = db_manager.save_diary_entry(
+          self.user_id, title_blob, content_blob, nonce, tag)
+        else:
+          success, msg = False, "Enkripsi AES Gagal"
         
         if success:
             QMessageBox.information(self, "Sukses", "Catatan berhasil dienkripsi dan disimpan.")
@@ -147,10 +149,16 @@ class DiaryTabWidget(QWidget):
             QMessageBox.warning(self, "Error", "Tidak ada catatan yang dipilih untuk diupdate.")
             return
 
-        title_blob, nonce, tag = crypto_utils.encrypt_aes_gcm(title, self.master_key)
-        content_blob, _, _ = crypto_utils.encrypt_aes_gcm(content, self.master_key)
-        
-        success, msg = db_manager.update_diary_entry(self.current_entry_id, title_blob, content_blob, nonce, tag)
+        (title_blob, content_blob, nonce, tag) = crypto_utils.encrypt_aes_gcm_entry(
+            title, content, self.master_key
+        )
+
+        if title_blob is not None:
+            success, msg = db_manager.update_diary_entry(
+                self.current_entry_id, title_blob, content_blob, nonce, tag
+            )
+        else:
+            success, msg = False, "Enkripsi AES Gagal"
         
         if success:
             QMessageBox.information(self, "Sukses", "Catatan berhasil diupdate.")
@@ -188,6 +196,7 @@ class DiaryTabWidget(QWidget):
         self.save_btn.setText("Simpan Catatan Baru")
         self.save_btn.clicked.disconnect()
         self.save_btn.clicked.connect(self._save_diary_entry)
+        self.current_entry_id = None # <-- TAMBAHKAN INI BIAR AMAN
 
 
 class SuperTextWidget(QWidget):
@@ -255,22 +264,21 @@ class SuperTextWidget(QWidget):
         ciphertext_bytes = crypto_utils.encrypt_caesar_xor(plaintext, shift, key)
         
         if ciphertext_bytes:
-            self.super_cipher.setPlainText(repr(ciphertext_bytes))
+            sself.super_cipher.setPlainText(ciphertext_bytes.hex()) # Ubah jadi string hex
 
     def _super_decrypt(self):
         shift, key = self._get_super_params()
         if shift is None: return
         
         try:
-            ciphertext_str = self.super_cipher.toPlainText()
-            if not ciphertext_str.startswith("b'") or not ciphertext_str.endswith("'"):
-                raise ValueError("Format ciphertext tidak valid.")
-            ciphertext_bytes = eval(ciphertext_str) # Ini agak berisiko, tapi untuk demo gpp
-            if not isinstance(ciphertext_bytes, bytes):
-                raise TypeError
-        except Exception:
-            QMessageBox.warning(self, "Error", "Format ciphertext tidak valid. Harusnya b'...'")
-            return
+          ciphertext_str = self.super_cipher.toPlainText()
+          ciphertext_bytes = bytes.fromhex(ciphertext_str) # Ubah dari string hex
+        except ValueError:
+          QMessageBox.warning(self, "Error", "Format ciphertext tidak valid. Harusnya string hex.")
+          return
+        except Exception as e:
+          QMessageBox.warning(self, "Error", f"Error: {e}")
+          return
             
         plaintext = crypto_utils.decrypt_caesar_xor(ciphertext_bytes, shift, key)
         if plaintext is not None:
@@ -576,6 +584,12 @@ class MainWindow(QMainWindow):
 
         # Hubungkan tombol dark mode
         self.settings_page.dark_mode_toggle.clicked.connect(self._toggle_dark_mode)
+        self.welcome_page.new_diary_btn.clicked.connect(
+            lambda: self.nav_bar.setCurrentRow(1) # Pindah ke tab Diary (index 1)
+        )
+        self.welcome_page.view_files_btn.clicked.connect(
+            lambda: self.nav_bar.setCurrentRow(3) # Pindah ke tab File (index 3)
+        )
 
         # Set halaman default
         self.nav_bar.setCurrentRow(0)
