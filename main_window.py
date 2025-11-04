@@ -329,39 +329,74 @@ class SuperTextWidget(QWidget):
 
     def _init_ui(self):
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("<H3>Teks Super (Caesar + XOR)</H3>"))
+        
+        # 1. Main Title (Disimpan sebagai atribut)
+        self.super_title_label = QLabel() 
+        layout.addWidget(self.super_title_label) 
 
         form_layout = QFormLayout()
         
+        # 2. Semua Label Form dibuat sebagai atribut
+        self.shift_label = QLabel() 
+        self.key_label = QLabel()  
+        self.plain_label = QLabel()
+        self.cipher_label = QLabel()
+        
+        # Input Fields
         self.super_plain = QTextEdit()
         self.super_plain.setPlaceholderText("Tulis plaintext di sini...")
         self.super_cipher = QTextEdit()
         self.super_cipher.setPlaceholderText("Ciphertext akan muncul di sini (format bytes 'b\"...\")")
         self.super_shift = QLineEdit("3")
-        self.super_shift.setValidator(QIntValidator()) # Hanya angka
+        self.super_shift.setValidator(QIntValidator())
         self.super_key = QLineEdit("kunci rahasia")
         
-        form_layout.addRow(QLabel("Shift (Angka):"), self.super_shift)
-        form_layout.addRow(QLabel("Kunci XOR (Teks):"), self.super_key)
+        # Tata Letak Form (menggunakan atribut label yang baru)
+        form_layout.addRow(self.shift_label, self.super_shift)
+        form_layout.addRow(self.key_label, self.super_key)
         
         layout.addLayout(form_layout)
-        layout.addWidget(QLabel("Plaintext:"))
+        
+        # Plaintext Section (menggunakan atribut label yang baru)
+        layout.addWidget(self.plain_label)
         layout.addWidget(self.super_plain)
         
+        # Button Section
         btn_layout = QHBoxLayout()
-        self.super_encrypt_btn = QPushButton("↓ Enkripsi ↓")
+        self.super_encrypt_btn = QPushButton("↓ Enkripsi ↓") # Akan di-update di retranslate_ui
         self.super_encrypt_btn.setStyleSheet("background-color: #28a745; color: white;")
         self.super_encrypt_btn.clicked.connect(self._super_encrypt)
         btn_layout.addWidget(self.super_encrypt_btn)
         
-        self.super_decrypt_btn = QPushButton("↑ Dekripsi ↑")
+        self.super_decrypt_btn = QPushButton("↑ Dekripsi ↑") # Akan di-update di retranslate_ui
         self.super_decrypt_btn.setStyleSheet("background-color: #007bff; color: white;")
         self.super_decrypt_btn.clicked.connect(self._super_decrypt)
         btn_layout.addWidget(self.super_decrypt_btn)
         
         layout.addLayout(btn_layout)
-        layout.addWidget(QLabel("Ciphertext (Hasil Enkripsi):"))
+        
+        # Ciphertext Section (menggunakan atribut label yang baru)
+        layout.addWidget(self.cipher_label)
         layout.addWidget(self.super_cipher)
+
+    def retranslate_ui(self, lang_code):
+        """Update semua teks di widget ini."""
+        strings = STRINGS[lang_code]
+        
+        # Update ALL Labels
+        self.super_title_label.setText(strings['super_title']) 
+        self.shift_label.setText(strings['super_shift_label']) 
+        self.key_label.setText(strings['super_key_label'])    
+        self.plain_label.setText(strings['super_plain_label'])
+        self.cipher_label.setText(strings['super_cipher_label'])
+        
+        # Update Placeholders & Buttons
+        self.super_plain.setPlaceholderText(strings['super_plain_ph'])
+        self.super_cipher.setPlaceholderText(strings['super_cipher_ph'])
+        self.super_encrypt_btn.setText(strings['super_btn_encrypt'])
+        self.super_decrypt_btn.setText(strings['super_btn_decrypt'])
+
+    # --- Fungsi Logic (JANGAN DIUBAH) ---
 
     def _get_super_params(self):
         try:
@@ -408,16 +443,6 @@ class SuperTextWidget(QWidget):
             self.super_plain.setPlainText(plaintext)
         else:
             QMessageBox.critical(self, "Dekripsi Gagal", "Kunci XOR atau Shift salah, atau data korup.")
-    def retranslate_ui(self, lang_code):
-        strings = STRINGS[lang_code]
-        self.layout().itemAt(0).widget().setText(strings['super_title'])
-        self.super_shift.setPlaceholderText(strings['super_shift_ph'])
-        self.super_key.setPlaceholderText(strings['super_key_ph'])
-        self.super_plain.setPlaceholderText(strings['super_plain_ph'])
-        self.super_cipher.setPlaceholderText(strings['super_cipher_ph'])
-        self.super_encrypt_btn.setText(strings['super_btn_encrypt'])
-        self.super_decrypt_btn.setText(strings['super_btn_decrypt'])
-
 
 class FileEncryptorWidget(QWidget):
     def __init__(self, master_key, username, parent=None): # <-- Tambah username
@@ -880,17 +905,26 @@ class MainWindow(QMainWindow):
         self.steganography_page.retranslate_ui(lang_code)
 
 
+    # DALAM class MainWindow:
+    
     def retranslate_ui(self, lang_code):
         """
-        FIX UI: Update semua teks di Navigasi Bar.
+        FIX UI: Update semua teks di Navigasi Bar dan Window Title.
         """
-        self.nav_bar.item(0).setText(STRINGS[lang_code]['nav_welcome'])
-        self.nav_bar.item(1).setText(STRINGS[lang_code]['nav_diary'])
-        self.nav_bar.item(2).setText(STRINGS[lang_code]['nav_super_text'])
-        self.nav_bar.item(3).setText(STRINGS[lang_code]['nav_file_encrypt'])
-        self.nav_bar.item(4).setText(STRINGS[lang_code]['nav_stegano'])
-        self.nav_bar.item(5).setText(STRINGS[lang_code]['nav_settings'])
-        self.nav_bar.item(7).setText(STRINGS[lang_code]['nav_logout']) # Index 7 krn index 6 itu spacer
+        strings = STRINGS[lang_code] # Ambil strings dari translations
+        
+        # --- FIX 1: Update WINDOW TITLE ---
+        self.setWindowTitle(strings['app_title']) 
+        # ----------------------------------
+        
+        # Nerjemahin Navigasi Bar
+        self.nav_bar.item(0).setText(strings['nav_welcome'])
+        self.nav_bar.item(1).setText(strings['nav_diary'])
+        self.nav_bar.item(2).setText(strings['nav_super_text'])
+        self.nav_bar.item(3).setText(strings['nav_file_encrypt'])
+        self.nav_bar.item(4).setText(strings['nav_stegano'])
+        self.nav_bar.item(5).setText(strings['nav_settings'])
+        self.nav_bar.item(7).setText(strings['nav_logout']) # Index 7 krn index 6 itu spacer
 
     # --- FUNGSI THEME ---
 

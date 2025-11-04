@@ -12,6 +12,7 @@ STRINGS = {
         'nav_logout': "Logout",
         'confirm_logout': "Konfirmasi Logout",
         'confirm_logout_msg': "Anda yakin ingin logout?",
+        'app_title': "Crypto Diary - Menu Utama",
 
         # Welcome Page (tetap)
         'welcome_greeting': "<h1>Selamat Datang, {username}!</h1>",
@@ -40,6 +41,10 @@ STRINGS = {
         
         # Super Text
         'super_title': "<H3>Teks Super (Caesar + XOR)</H3>",
+        'super_shift_label': "Shift (Angka):",
+        'super_key_label': "Kunci XOR (Teks):",
+        'super_plain_label': "Plaintext:",
+        'super_cipher_label': "Ciphertext (Hasil Enkripsi):",
         'super_shift_ph': "Masukkan pergeseran angka...",
         'super_key_ph': "Masukkan kunci XOR...",
         'super_plain_ph': "Tulis plaintext di sini...",
@@ -75,6 +80,7 @@ STRINGS = {
         'nav_logout': "Logout",
         'confirm_logout': "Logout Confirmation",
         'confirm_logout_msg': "Are you sure you want to logout?",
+        'app_title': "Crypto Diary - Main Menu",
 
         # Welcome Page (tetap)
         'welcome_greeting': "<h1>Welcome, {username}!</h1>",
@@ -103,6 +109,10 @@ STRINGS = {
         
         # Super Text
         'super_title': "<H3>Super Text (Caesar + XOR)</H3>",
+        'super_shift_label': "Shift (Numeric):",
+        'super_key_label': "XOR Key (Text):",
+        'super_plain_label': "Plaintext:",
+        'super_cipher_label': "Ciphertext (Encrypted Result):",
         'super_shift_ph': "Enter numeric shift value...",
         'super_key_ph': "Enter XOR key...",
         'super_plain_ph': "Write plaintext here...",
