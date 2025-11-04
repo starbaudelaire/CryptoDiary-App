@@ -1,8 +1,6 @@
-# UPDATE translations.py DENGAN SEMUA STRING BARU INI:
-
 STRINGS = {
     'id': {
-        # Navigasi (tetap)
+        # Navigasi 
         'nav_welcome': "Selamat Datang",
         'nav_diary': "Diary Pribadi",
         'nav_super_text': "Teks Super",
@@ -14,20 +12,19 @@ STRINGS = {
         'confirm_logout_msg': "Anda yakin ingin logout?",
         'app_title': "Crypto Diary - Menu Utama",
 
-        # Welcome Page (tetap)
+        # Welcome Page 
         'welcome_greeting': "<h1>Selamat Datang, {username}!</h1>",
         'welcome_info': "Ini adalah aplikasi Crypto Diary Anda. Pilih menu di samping untuk mulai menggunakan fitur kriptografi.",
         'welcome_quick_actions': "<h3>Aksi Cepat:</h3>",
         'welcome_btn_new_note': "Buat Catatan Baru",
         'welcome_btn_view_files': "Enkripsi/Dekripsi File",
         
-        # Settings Page (tetap)
+        # Settings Page 
         'settings_title': "<h1>Pengaturan</h1>",
         'settings_dark_mode_on': "Aktifkan Dark Mode",
         'settings_dark_mode_off': "Nonaktifkan Dark Mode",
         'settings_lang_label': "Pilih Bahasa:",
         
-        # --- NEW STRINGS UNTUK WIDGET ---
         
         # Diary Page
         'diary_title': "<H3>Catatan Terenkripsi:</H3>",
@@ -70,7 +67,7 @@ STRINGS = {
 
     },
     'en': {
-        # Navigasi (tetap)
+        # Navigasi  
         'nav_welcome': "Welcome",
         'nav_diary': "Private Diary",
         'nav_super_text': "Super Text",
@@ -82,20 +79,19 @@ STRINGS = {
         'confirm_logout_msg': "Are you sure you want to logout?",
         'app_title': "Crypto Diary - Main Menu",
 
-        # Welcome Page (tetap)
+        # Welcome Page  
         'welcome_greeting': "<h1>Welcome, {username}!</h1>",
         'welcome_info': "This is your Crypto Diary application. Select a menu on the left to start using cryptography features.",
         'welcome_quick_actions': "<h3>Quick Actions:</h3>",
         'welcome_btn_new_note': "Create New Note",
         'welcome_btn_view_files': "Encrypt/Decrypt File",
         
-        # Settings Page (tetap)
+        # Settings Page  
         'settings_title': "<h1>Settings</h1>",
         'settings_dark_mode_on': "Enable Dark Mode",
         'settings_dark_mode_off': "Disable Dark Mode",
         'settings_lang_label': "Select Language:",
         
-        # --- NEW STRINGS UNTUK WIDGET ---
 
         # Diary Page
         'diary_title': "<H3>Encrypted Notes:</H3>",
