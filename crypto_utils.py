@@ -116,9 +116,34 @@ def decrypt_aes_gcm_entry(title_bytes, content_bytes, key, nonce_bytes, tag_byte
         print(f"Error dekripsi AES: {e}")
         return (None, None)
 
-# ...(kode dari Bagian 1 & 2 ada di atas sini)...
+def encrypt_aes_gcm_single(plaintext_str, key):
+    """
+    Enkripsi SATU string/bytes menggunakan AES-GCM.
+    Mengembalikan tuple: (ciphertext_bytes, nonce_bytes, tag_bytes)
+    """
+    try:
+        plaintext_bytes = plaintext_str.encode('utf-8')
+        cipher = AES.new(key, AES.MODE_GCM)
+        ciphertext, tag = cipher.encrypt_and_digest(plaintext_bytes)
+        nonce = cipher.nonce
+        return (ciphertext, nonce, tag)
+    except Exception as e:
+        print(f"Error enkripsi AES single: {e}")
+        return (None, None, None)
 
-# --- BAGIAN 3: Teks Super (Caesar Cipher + XOR) ---
+def decrypt_aes_gcm_single(ciphertext_bytes, key, nonce_bytes, tag_bytes):
+    """
+    Dekripsi SATU data/bytes AES-GCM.
+    Mengembalikan: plaintext (string) atau None
+    """
+    try:
+        cipher = AES.new(key, AES.MODE_GCM, nonce=nonce_bytes)
+        plaintext_bytes = cipher.decrypt_and_verify(ciphertext_bytes, tag_bytes)
+        plaintext_str = plaintext_bytes.decode('utf-8')
+        return plaintext_str
+    except (ValueError, KeyError) as e:
+        print(f"Error dekripsi/verifikasi AES single: {e}")
+        return None
 
 def _caesar_cipher(text, shift, mode='encrypt'):
     """Fungsi internal untuk Caesar Cipher. Hanya memproses huruf A-Z."""
