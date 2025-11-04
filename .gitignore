@@ -1,0 +1,10 @@
+# Database
+*.db
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Kalo lu pake virtual environment
+.venv/
+venv/
