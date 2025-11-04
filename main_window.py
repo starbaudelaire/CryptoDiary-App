@@ -455,9 +455,13 @@ class FileEncryptorWidget(QWidget):
     def _init_ui(self):
         layout = QVBoxLayout(self)
         layout.setSpacing(15)
-        layout.addWidget(QLabel("<H3>Enkripsi/Dekripsi File (Blowfish)</H3>"))
         
-        self.file_path_label = QLabel("File belum dipilih.")
+        # 1. Main Title (sekarang jadi atribut self)
+        self.file_title_label = QLabel() 
+        layout.addWidget(self.file_title_label)
+        
+        # 2. Label & Buttons (sekarang jadi atribut self)
+        self.file_path_label = QLabel("File belum dipilih.") 
         layout.addWidget(self.file_path_label)
         
         self.file_select_btn = QPushButton("Pilih File...")
@@ -489,6 +493,7 @@ class FileEncryptorWidget(QWidget):
             return
             
         default_name = os.path.basename(self.selected_file_path)
+        default_name += ".blow"
         output_path, _ = QFileDialog.getSaveFileName(self, "Simpan File Terenkripsi", default_name)
         if not output_path: return
         
@@ -501,8 +506,20 @@ class FileEncryptorWidget(QWidget):
         if not self.selected_file_path:
             QMessageBox.warning(self, "Error", "Pilih file terenkripsi terlebih dahulu.")
             return
+            
         base_name = os.path.basename(self.selected_file_path)
-        default_name, _ = os.path.splitext(base_name)
+        
+        # --- LOGIKA PENAMAAN FILE OUTPUT BARU ---
+        if base_name.lower().endswith(".blow"):
+            # Jika ada .blow (ekstensi khusus enkripsi), hapus .blow
+            default_name = base_name[:-5] 
+        else:
+            # Jika tidak ada, tambahkan awalan 'DECRYPTED_'
+            default_name, ext = os.path.splitext(base_name)
+            default_name = f"DECRYPTED_{default_name}{ext}"
+        # ----------------------------------------
+            
+        # Panggil QFileDialog dengan nama file yang sudah benar
         output_path, _ = QFileDialog.getSaveFileName(self, "Simpan File Hasil Dekripsi", default_name)
         if not output_path: return
         
@@ -513,7 +530,7 @@ class FileEncryptorWidget(QWidget):
     
     def retranslate_ui(self, lang_code):
         strings = STRINGS[lang_code]
-        self.layout().itemAt(0).widget().setText(strings['file_title'])
+        self.file_title_label.setText(strings['file_title'])
         self.file_path_label.setText(strings['file_not_selected'])
         self.file_select_btn.setText(strings['file_btn_select'])
         self.file_encrypt_btn.setText(strings['file_btn_encrypt'])
@@ -824,12 +841,14 @@ class MainWindow(QMainWindow):
 
         # Buat halaman-halaman (widget) untuk tiap menu
         self.welcome_page = WelcomeWidget(self.username)
+        self.welcome_page.setObjectName("WelcomeWidget")
         # Tambah username ke widget-widget ini
         self.diary_page = DiaryTabWidget(self.user_id, self.master_key, self.username)
         self.super_text_page = SuperTextWidget()
         self.file_encryptor_page = FileEncryptorWidget(self.master_key, self.username)
         self.steganography_page = SteganographyWidget(self.master_key, self.username)
         self.settings_page = SettingsWidget() 
+        self.settings_page.setObjectName("SettingsWidget")
 
         # Tambahkan ke stacked widget
         self.stacked_widget.addWidget(self.welcome_page) # Index 0
@@ -935,12 +954,12 @@ class MainWindow(QMainWindow):
         is_dark_toggled_on = self.settings_page.dark_mode_toggle.isChecked()
         
         if is_dark_toggled_on:
-            self._apply_theme('dark')
-            self.current_theme = 'dark'
+            new_theme = 'dark'
         else:
-            self._apply_theme('light')
-            self.current_theme = 'light'
+            new_theme = 'light'
         
+        self._apply_theme(new_theme)
+        self.current_theme = new_theme
         # Update teks tombol di Settings
         self.settings_page.retranslate_ui(self.current_lang, is_dark_toggled_on)
         
@@ -962,10 +981,28 @@ class MainWindow(QMainWindow):
             self.setStyleSheet("""
                 QMainWindow { background-color: #343a40; }
                 QWidget { color: white; }
+                SettingsWidget QLabel
+                WelcomeWidget QLabel {
+                    color: white; 
+                }
                 QLineEdit, QTextEdit, QListWidget { 
                     background-color: #495057; 
                     border: 1px solid #6c757d; 
                     color: white; 
+                }
+                QLabel { 
+                    color: white; /* Paksa semua label jadi putih */
+                }
+                 QComboBox {
+                    background-color: #495057;
+                    color: white; /* Warna teks utama di ComboBox */
+                    border: 1px solid #6c757d;
+                    padding: 5px;
+                }
+                QComboBox QAbstractItemView {
+                    background-color: #495057; /* Warna background dropdown */
+                    color: white;              /* Warna teks di dropdown */
+                    selection-background-color: #007bff;
                 }
                 QMessageBox { 
                     background-color: #495057; 
@@ -993,6 +1030,13 @@ class MainWindow(QMainWindow):
             palette.setColor(QPalette.Highlight, QColor(0, 120, 215))
             palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))
             self.setStyleSheet("""
+                QWidget { 
+                    color: black; 
+                }           
+                SettingsWidget QLabel 
+                WelcomeWidget QLabel {
+                    color: black; 
+                }    
                 QLineEdit, QTextEdit, QListWidget { 
                     background-color: white; 
                     border: 1px solid #ccc; 
@@ -1274,6 +1318,7 @@ def _toggle_dark_mode(self):
     def _apply_theme(self, theme_name):
         palette = QPalette()
         if theme_name == 'dark':
+            # --- DARK THEME SETTINGS ---
             palette.setColor(QPalette.Window, QColor(53, 53, 53))
             palette.setColor(QPalette.WindowText, QColor(255, 255, 255))
             palette.setColor(QPalette.Base, QColor(25, 25, 25))
@@ -1283,13 +1328,13 @@ def _toggle_dark_mode(self):
             palette.setColor(QPalette.Text, QColor(255, 255, 255))
             palette.setColor(QPalette.Button, QColor(53, 53, 53))
             palette.setColor(QPalette.ButtonText, QColor(255, 255, 255))
-            palette.setColor(QPalette.BrightText, QColor(255, 0, 0))
-            palette.setColor(QPalette.Link, QColor(42, 130, 218))
             palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
             palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
+            
+            # CSS untuk Dark Theme
             self.setStyleSheet("""
                 QMainWindow { background-color: #343a40; }
-                QWidget { color: white; }
+                QWidget { color: white; } /* Font putih untuk Dark Mode */
                 QLineEdit, QTextEdit, QListWidget { 
                     background-color: #495057; 
                     border: 1px solid #6c757d; 
@@ -1308,10 +1353,12 @@ def _toggle_dark_mode(self):
                     border-radius: 3px; 
                 }
             """)
-        else: # Light theme
+        else: 
+            # --- LIGHT THEME SETTINGS (WITH FONT FIX) ---
             palette = QApplication.instance().palette() # Reset ke palette default
             self.setStyleSheet("") # Clear custom stylesheet
-            # Set colors for specific elements
+            
+            # Set colors for specific elements (Light Palette)
             palette.setColor(QPalette.Window, QColor(240, 240, 240))
             palette.setColor(QPalette.WindowText, QColor(0, 0, 0))
             palette.setColor(QPalette.Base, QColor(255, 255, 255))
@@ -1321,7 +1368,12 @@ def _toggle_dark_mode(self):
             palette.setColor(QPalette.ButtonText, QColor(0, 0, 0))
             palette.setColor(QPalette.Highlight, QColor(0, 120, 215))
             palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))
+            
+            # CSS untuk Light Theme (Memaksa warna font hitam)
             self.setStyleSheet("""
+                QWidget { 
+                    color: black; /* FIX: Paksa font jadi hitam di Light Mode */
+                }
                 QLineEdit, QTextEdit, QListWidget { 
                     background-color: white; 
                     border: 1px solid #ccc; 

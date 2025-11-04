@@ -2,6 +2,7 @@
 
 import sys
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtGui import QPalette
 
 import db_manager
 from login_window import LoginWindow
@@ -65,6 +66,11 @@ class AppController:
     def handle_logout(self):
         """Fungsi ini dipanggil pas MainWindow ngirim signal logout"""
         print("Logout diproses...")
+        
+        from PyQt5.QtWidgets import QApplication
+        from PyQt5.QtGui import QPalette
+        QApplication.instance().setPalette(QApplication.instance().style().standardPalette())
+        
         # Tampilkan lagi jendela login
         self.show_login_window()
         
