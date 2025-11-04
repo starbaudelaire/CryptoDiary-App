@@ -1,5 +1,3 @@
-# Nama file: login_window.py (UPDATE)
-
 import sys
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLabel, 
                              QLineEdit, QPushButton, QMessageBox)
@@ -8,8 +6,7 @@ import db_manager
 import crypto_utils
 
 class LoginWindow(QWidget):
-    # --- UPDATE: Tambahkan 'username' ke signal ---
-    login_success = pyqtSignal(int, bytes, str) # user_id, master_key, username
+    login_success = pyqtSignal(int, bytes, str) 
 
     def __init__(self):
         super().__init__()
@@ -17,13 +14,12 @@ class LoginWindow(QWidget):
 
     def init_ui(self):
         self.setWindowTitle('Crypto Diary - Login')
-        self.setFixedSize(350, 250) # Sedikit lebih besar
+        self.setFixedSize(350, 250) 
         
         layout = QVBoxLayout()
-        layout.setSpacing(10) # Jarak antar widget
-        layout.setAlignment(Qt.AlignCenter) # Tengahin konten
+        layout.setSpacing(10) 
+        layout.setAlignment(Qt.AlignCenter) 
 
-        # Style untuk QLabel dan QLineEdit biar lebih rapi
         self.setStyleSheet("""
             QLabel {
                 font-size: 14px;
@@ -63,7 +59,6 @@ class LoginWindow(QWidget):
         layout.addWidget(self.pass_label)
         layout.addWidget(self.pass_input)
         
-        # Tambahkan sedikit spacer untuk pemisah
         layout.addSpacing(15)
 
         self.login_button = QPushButton('Login')
@@ -71,7 +66,6 @@ class LoginWindow(QWidget):
         layout.addWidget(self.login_button)
         
         self.register_button = QPushButton('Register')
-        # Ganti warna register button
         self.register_button.setStyleSheet("""
             QPushButton {
                 background-color: #007bff; /* Blue */
@@ -112,7 +106,6 @@ class LoginWindow(QWidget):
             
             self._show_message('Login Berhasil', f'Selamat datang, {username}!')
             
-            # --- UPDATE: Kirim username juga ---
             self.login_success.emit(user_id, master_key, username)
             self.close()
         else:
