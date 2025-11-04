@@ -150,6 +150,20 @@ class DiaryTabWidget(QWidget):
         # Index 7 karena index 6 itu spacer
         self.nav_bar.item(7).setText(STRINGS[lang_code]['nav_logout'])
 
+    def retranslate_ui(self, lang_code):
+        strings = STRINGS[lang_code]
+        self.diary_list_label.setText(strings['diary_title']) # Asumsi ada di translations
+        self.diary_title_label.setText(strings['diary_note_title'])
+        self.diary_content_label.setText(strings['diary_note_content'])
+        self.diary_title.setPlaceholderText(strings['diary_placeholder_title'])
+        self.diary_content.setPlaceholderText(strings['diary_placeholder_content'])
+        self.save_btn.setText(strings['diary_btn_save'])
+        self.clear_btn.setText(strings['diary_btn_clear'])
+        self.delete_btn.setText(strings['diary_btn_delete'])
+        
+        # Panggil ulang _load_diary_entries() agar list juga ikut ter-update
+        self._load_diary_entries()
+
     def _toggle_dark_mode(self):
         """
         FIX 5: Ini fungsi toggle dark mode yang UDAH BENER
@@ -394,6 +408,15 @@ class SuperTextWidget(QWidget):
             self.super_plain.setPlainText(plaintext)
         else:
             QMessageBox.critical(self, "Dekripsi Gagal", "Kunci XOR atau Shift salah, atau data korup.")
+    def retranslate_ui(self, lang_code):
+        strings = STRINGS[lang_code]
+        self.layout().itemAt(0).widget().setText(strings['super_title'])
+        self.super_shift.setPlaceholderText(strings['super_shift_ph'])
+        self.super_key.setPlaceholderText(strings['super_key_ph'])
+        self.super_plain.setPlaceholderText(strings['super_plain_ph'])
+        self.super_cipher.setPlaceholderText(strings['super_cipher_ph'])
+        self.super_encrypt_btn.setText(strings['super_btn_encrypt'])
+        self.super_decrypt_btn.setText(strings['super_btn_decrypt'])
 
 
 class FileEncryptorWidget(QWidget):
@@ -462,6 +485,14 @@ class FileEncryptorWidget(QWidget):
             self.selected_file_path, self.master_key, output_path
         )
         QMessageBox.information(self, "Dekripsi File", msg)
+    
+    def retranslate_ui(self, lang_code):
+        strings = STRINGS[lang_code]
+        self.layout().itemAt(0).widget().setText(strings['file_title'])
+        self.file_path_label.setText(strings['file_not_selected'])
+        self.file_select_btn.setText(strings['file_btn_select'])
+        self.file_encrypt_btn.setText(strings['file_btn_encrypt'])
+        self.file_decrypt_btn.setText(strings['file_btn_decrypt'])
 
 
 class SteganographyWidget(QWidget):
@@ -556,6 +587,16 @@ class SteganographyWidget(QWidget):
                 QMessageBox.critical(self, "Ekstraksi Gagal", "Dekripsi gagal. Kunci master salah atau data korup.")
         except Exception as e:
             QMessageBox.critical(self, "Ekstraksi Error", f"Gagal membongkar payload: {e}. Mungkin ini bukan stego-image?")
+    
+    def retranslate_ui(self, lang_code):
+        strings = STRINGS[lang_code]
+        self.layout().itemAt(0).widget().setText(strings['stego_title'])
+        self.stego_img_label.setText(strings['stego_cover_not_selected'])
+        self.stego_select_btn.setText(strings['stego_btn_select_cover'])
+        self.layout().itemAt(3).widget().setText(strings['stego_msg_label']) # Label Pesan Rahasia
+        self.stego_payload.setPlaceholderText(strings['stego_payload_ph'])
+        self.stego_embed_btn.setText(strings['stego_btn_embed'])
+        self.stego_extract_btn.setText(strings['stego_btn_extract'])
 
 
 # GANTI SEMUA 'class WelcomeWidget' DENGAN INI:
@@ -673,9 +714,10 @@ class SettingsWidget(QWidget):
 
 # --- Main Application Window ---
 
+# --- Main Application Window ---
+
 class MainWindow(QMainWindow):
     logout_signal = pyqtSignal()
-    # language_changed signal nggak perlu di sini, udah di SettingsWidget
 
     def __init__(self, user_id, master_key, username):
         super().__init__()
@@ -692,9 +734,10 @@ class MainWindow(QMainWindow):
         self._init_ui() # Panggil _init_ui SATU KALI
         self._apply_theme('light') # Terapkan tema awal
         
-        # Panggil _on_language_change, yg akan manggil retranslate_ui
-        # Ini bakal nge-fix bug tulisan kosong di Welcome & Settings
+        # Panggil _on_language_change di akhir __init__
+        # Ini yang nge-fix bug tulisan kosong di Welcome & Settings
         self._on_language_change(self.current_lang) 
+
 
     def _init_ui(self):
         # Container utama
@@ -709,27 +752,27 @@ class MainWindow(QMainWindow):
         self.nav_bar.setFixedWidth(200) # Lebar navigasi
         self.nav_bar.setStyleSheet("""
             QListWidget {
-                background-color: #343a40; /* Dark background */
-                color: #f8f9fa; /* Light text */
+                background-color: #343a40;
+                color: #f8f9fa; 
                 border: none;
                 font-size: 16px;
                 padding: 10px 0;
             }
             QListWidget::item {
-                padding: 15px 10px; /* Padding tiap item */
-                border-bottom: 1px solid #495057; /* Garis pemisah */
+                padding: 15px 10px;
+                border-bottom: 1px solid #495057;
             }
             QListWidget::item:selected {
-                background-color: #007bff; /* Blue for selected */
+                background-color: #007bff;
                 color: white;
-                border-left: 5px solid #28a745; /* Green border for active */
+                border-left: 5px solid #28a745;
             }
             QListWidget::item:hover {
-                background-color: #495057; /* Darker on hover */
+                background-color: #495057;
             }
         """)
 
-        # Tambah item menu (TEKS STATIS DULU, NANTI DI-UPDATE)
+        # Tambah item menu
         self.nav_bar.addItem(QListWidgetItem(QIcon("icons/home.png"), "Welcome")) # Index 0
         self.nav_bar.addItem(QListWidgetItem(QIcon("icons/diary.png"), "Diary Pribadi")) # Index 1
         self.nav_bar.addItem(QListWidgetItem(QIcon("icons/text.png"), "Teks Super")) # Index 2
@@ -743,10 +786,10 @@ class MainWindow(QMainWindow):
         self.nav_bar.addItem(spacer_item) # Spacer (Index 6)
 
         logout_item = QListWidgetItem(QIcon("icons/logout.png"), "Logout") # Index 7
-        logout_item.setForeground(QColor("#dc3545")) # Bikin warnanya merah
+        logout_item.setForeground(QColor("#dc3545")) 
         self.nav_bar.addItem(logout_item)
 
-        # Sambungin signal 'itemClicked', BUKAN 'currentRowChanged'
+        # Sambungin signal 'itemClicked' (CRITICAL LINE)
         self.nav_bar.itemClicked.connect(self._handle_nav_click)
         main_layout.addWidget(self.nav_bar)
 
@@ -756,11 +799,12 @@ class MainWindow(QMainWindow):
 
         # Buat halaman-halaman (widget) untuk tiap menu
         self.welcome_page = WelcomeWidget(self.username)
+        # Tambah username ke widget-widget ini
         self.diary_page = DiaryTabWidget(self.user_id, self.master_key, self.username)
         self.super_text_page = SuperTextWidget()
         self.file_encryptor_page = FileEncryptorWidget(self.master_key, self.username)
         self.steganography_page = SteganographyWidget(self.master_key, self.username)
-        self.settings_page = SettingsWidget() # Halaman pengaturan
+        self.settings_page = SettingsWidget() 
 
         # Tambahkan ke stacked widget
         self.stacked_widget.addWidget(self.welcome_page) # Index 0
@@ -775,24 +819,22 @@ class MainWindow(QMainWindow):
         self.settings_page.language_changed.connect(self._on_language_change)
 
         self.welcome_page.new_diary_btn.clicked.connect(
-            lambda: self.nav_bar.setCurrentRow(1) # Pindah ke tab Diary (index 1)
+            lambda: self.nav_bar.setCurrentRow(1)
         )
         self.welcome_page.view_files_btn.clicked.connect(
-            lambda: self.nav_bar.setCurrentRow(3) # Pindah ke tab File (index 3)
+            lambda: self.nav_bar.setCurrentRow(3)
         )
 
         # Set halaman default
         self.nav_bar.setCurrentRow(0)
 
-    # --- INI FUNGSI-FUNGSI YANG HILANG / SALAH TEMPAT ---
-    # (PASTIKAN INDENTASINYA BENER, SEJAJAR SAMA _init_ui)
+    # --- FUNGSI NAVIGASI DAN LOGOUT ---
 
     def _handle_nav_click(self, item):
         """
-        FIX 1: Ini fungsi yang ilang & nyebabin crash.
+        FIX CRASH: Ini fungsi yang dicaru Python.
         Fungsi ini nanganin SEMUA klik di sidebar.
         """
-        # Dapatkan teks dari item (misal "Logout" atau "Diary Pribadi")
         item_text = item.text()
         
         # Dapatkan teks "Logout" yang sudah diterjemahkan
@@ -803,56 +845,59 @@ class MainWindow(QMainWindow):
         else:
             # Kalo bukan logout, ganti halaman
             row = self.nav_bar.row(item)
-            if row < self.stacked_widget.count(): # Cek biar valid (bukan spacer)
+            if row < self.stacked_widget.count():
                 self.stacked_widget.setCurrentIndex(row)
 
     def _do_logout(self):
         """
-        FIX 2: Ini fungsi logout yang UDAH BENER (pake terjemahan)
+        FIX LOGOUT: Fungsi untuk memproses permintaan logout.
         """
         # Ambil teks terjemahan
         title = STRINGS[self.current_lang]['confirm_logout']
         msg = STRINGS[self.current_lang]['confirm_logout_msg']
-        
+
         reply = QMessageBox.question(self, title, msg, 
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
             self.logout_signal.emit() # Kirim signal ke main.py
-            self.close() # Tutup Main Window
+            self.close() 
+
+    # --- FUNGSI TRANSLATION ---
 
     def _on_language_change(self, lang_code):
         """
-        FIX 3: Ini fungsi yang ilang buat nerima signal ganti bahasa.
-        Ini yang ngebenerin bug 'Welcome' & 'Settings' kosong.
+        FIX TRANSLATION: Dipanggil pas signal ganti bahasa.
         """
         self.current_lang = lang_code
         self.retranslate_ui(lang_code) # Update teks di MainWindow
         
-        # Update teks di semua child widget
+        # Update teks di semua child widget (Penting!)
         self.welcome_page.retranslate_ui(lang_code)
         self.settings_page.retranslate_ui(lang_code, self.current_theme == 'dark')
-        # (Tambahin retranslate_ui() buat tab lain di sini kalo mau)
+        self.diary_page.retranslate_ui(lang_code)
+        self.super_text_page.retranslate_ui(lang_code)
+        self.file_encryptor_page.retranslate_ui(lang_code)
+        self.steganography_page.retranslate_ui(lang_code)
+
 
     def retranslate_ui(self, lang_code):
         """
-        FIX 4: Ini fungsi yang ilang buat nerjemahin UI.
-        Ini juga ngebenerin bug 'Welcome' & 'Settings' kosong.
+        FIX UI: Update semua teks di Navigasi Bar.
         """
-        # Nerjemahin Navigasi Bar
         self.nav_bar.item(0).setText(STRINGS[lang_code]['nav_welcome'])
         self.nav_bar.item(1).setText(STRINGS[lang_code]['nav_diary'])
         self.nav_bar.item(2).setText(STRINGS[lang_code]['nav_super_text'])
         self.nav_bar.item(3).setText(STRINGS[lang_code]['nav_file_encrypt'])
         self.nav_bar.item(4).setText(STRINGS[lang_code]['nav_stegano'])
         self.nav_bar.item(5).setText(STRINGS[lang_code]['nav_settings'])
-        # Index 7 karena index 6 itu spacer
-        self.nav_bar.item(7).setText(STRINGS[lang_code]['nav_logout'])
+        self.nav_bar.item(7).setText(STRINGS[lang_code]['nav_logout']) # Index 7 krn index 6 itu spacer
+
+    # --- FUNGSI THEME ---
 
     def _toggle_dark_mode(self):
         """
-        FIX 5: Ini fungsi toggle dark mode yang UDAH BENER
+        FIX THEME: Memproses toggle dark/light mode.
         """
-        # Cek status tombolnya SEKARANG
         is_dark_toggled_on = self.settings_page.dark_mode_toggle.isChecked()
         
         if is_dark_toggled_on:
@@ -862,8 +907,9 @@ class MainWindow(QMainWindow):
             self._apply_theme('light')
             self.current_theme = 'light'
         
-        # Update teks tombolnya pake bahasa yg bener
+        # Update teks tombol di Settings
         self.settings_page.retranslate_ui(self.current_lang, is_dark_toggled_on)
+        
         
     def _apply_theme(self, theme_name):
         palette = QPalette()
@@ -877,8 +923,6 @@ class MainWindow(QMainWindow):
             palette.setColor(QPalette.Text, QColor(255, 255, 255))
             palette.setColor(QPalette.Button, QColor(53, 53, 53))
             palette.setColor(QPalette.ButtonText, QColor(255, 255, 255))
-            palette.setColor(QPalette.BrightText, QColor(255, 0, 0))
-            palette.setColor(QPalette.Link, QColor(42, 130, 218))
             palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
             palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
             self.setStyleSheet("""
@@ -905,7 +949,6 @@ class MainWindow(QMainWindow):
         else: # Light theme
             palette = QApplication.instance().palette() # Reset ke palette default
             self.setStyleSheet("") # Clear custom stylesheet
-            # Set colors for specific elements
             palette.setColor(QPalette.Window, QColor(240, 240, 240))
             palette.setColor(QPalette.WindowText, QColor(0, 0, 0))
             palette.setColor(QPalette.Base, QColor(255, 255, 255))
@@ -1062,6 +1105,96 @@ def _toggle_dark_mode(self):
         # Set halaman default
         self.nav_bar.setCurrentRow(0)
 
+    # PASTE SEMUA BLOK INI DI DALAM 'class MainWindow' (setelah _init_ui)
+
+    def _handle_nav_click(self, item):
+        """
+        FIX 1: Ini fungsi yang ilang & nyebabin crash.
+        Fungsi ini nanganin SEMUA klik di sidebar.
+        """
+        # Dapatkan teks dari item (misal "Logout" atau "Diary Pribadi")
+        item_text = item.text()
+        
+        # Dapatkan teks "Logout" yang sudah diterjemahkan
+        logout_text = STRINGS[self.current_lang]['nav_logout']
+        
+        if item_text == logout_text:
+            self._do_logout()
+        else:
+            # Kalo bukan logout, ganti halaman
+            row = self.nav_bar.row(item)
+            if row < self.stacked_widget.count(): # Cek biar valid (bukan spacer)
+                self.stacked_widget.setCurrentIndex(row)
+
+    def _change_page(self, index):
+        """
+        Fungsi ini cuma buat ganti page.
+        (Sebenernya ini udah nggak kepake kalo kita pake _handle_nav_click, 
+        tapi biarin aja aman)
+        """
+        if index < self.stacked_widget.count():
+            self.stacked_widget.setCurrentIndex(index)
+
+    def _do_logout(self):
+        """
+        FIX 2: Ini fungsi logout yang UDAH BENER (pake terjemahan)
+        """
+        # Ambil teks terjemahan
+        title = STRINGS[self.current_lang]['confirm_logout']
+        msg = STRINGS[self.current_lang]['confirm_logout_msg']
+        
+        reply = QMessageBox.question(self, title, msg, 
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            self.logout_signal.emit() # Kirim signal ke main.py
+            self.close() # Tutup Main Window
+
+    def _on_language_change(self, lang_code):
+        """
+        FIX 3: Ini fungsi yang ilang buat nerima signal ganti bahasa.
+        Ini yang ngebenerin bug 'Welcome' & 'Settings' kosong.
+        """
+        print(f"MAIN: Bahasa diganti ke: {lang_code}") # Debug
+        self.current_lang = lang_code
+        self.retranslate_ui(lang_code) # Update teks di MainWindow
+        
+        # Update teks di semua child widget
+        self.welcome_page.retranslate_ui(lang_code)
+        self.settings_page.retranslate_ui(lang_code, self.current_theme == 'dark')
+        # (Nanti lu bisa tambahin retranslate_ui() buat tab lain di sini)
+
+    def retranslate_ui(self, lang_code):
+        """
+        FIX 4: Ini fungsi yang ilang buat nerjemahin UI.
+        Ini juga ngebenerin bug 'Welcome' & 'Settings' kosong.
+        """
+        # Nerjemahin Navigasi Bar
+        self.nav_bar.item(0).setText(STRINGS[lang_code]['nav_welcome'])
+        self.nav_bar.item(1).setText(STRINGS[lang_code]['nav_diary'])
+        self.nav_bar.item(2).setText(STRINGS[lang_code]['nav_super_text'])
+        self.nav_bar.item(3).setText(STRINGS[lang_code]['nav_file_encrypt'])
+        self.nav_bar.item(4).setText(STRINGS[lang_code]['nav_stegano'])
+        self.nav_bar.item(5).setText(STRINGS[lang_code]['nav_settings'])
+        # Index 7 karena index 6 itu spacer
+        self.nav_bar.item(7).setText(STRINGS[lang_code]['nav_logout'])
+
+    def _toggle_dark_mode(self):
+        """
+        FIX 5: Ini fungsi toggle dark mode yang UDAH BENER
+        """
+        # Cek status tombolnya SEKARANG
+        is_dark_toggled_on = self.settings_page.dark_mode_toggle.isChecked()
+        
+        if is_dark_toggled_on:
+            self._apply_theme('dark')
+            self.current_theme = 'dark'
+        else:
+            self._apply_theme('light')
+            self.current_theme = 'light'
+        
+        # Update teks tombolnya pake bahasa yg bener
+        self.settings_page.retranslate_ui(self.current_lang, is_dark_toggled_on)
+    
     def _handle_nav_click(self, item):
         text = item.text()
 
