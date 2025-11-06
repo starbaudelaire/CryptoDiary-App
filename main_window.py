@@ -25,7 +25,6 @@ class DiaryTabWidget(QWidget):
     def _init_ui(self):
         layout = QHBoxLayout(self) 
         
-        # Kolom Kiri: List Judul
         left_layout = QVBoxLayout()
         self.diary_list_label = QLabel("<H3>Catatan Terenkripsi:</H3>")
         left_layout.addWidget(self.diary_list_label)
@@ -33,7 +32,6 @@ class DiaryTabWidget(QWidget):
         self.diary_list.itemClicked.connect(self._display_diary_entry)
         left_layout.addWidget(self.diary_list)
         
-        # Kolom Kanan: Editor Teks
         right_layout = QVBoxLayout()
         self.diary_title_label = QLabel("<H3>Judul Catatan:</H3>")
         right_layout.addWidget(self.diary_title_label)
@@ -96,23 +94,20 @@ class DiaryTabWidget(QWidget):
             self.close() 
 
     def _on_language_change(self, lang_code):
-        print(f"MAIN: Bahasa diganti ke: {lang_code}") # Debug
+        print(f"MAIN: Bahasa diganti ke: {lang_code}") 
         self.current_lang = lang_code
-        self.retranslate_ui(lang_code) # Update teks di MainWindow
+        self.retranslate_ui(lang_code) 
         
-        # Update teks di semua child widget
         self.welcome_page.retranslate_ui(lang_code)
         self.settings_page.retranslate_ui(lang_code, self.current_theme == 'dark')
 
     def retranslate_ui(self, lang_code):
-        # Nerjemahin Navigasi Bar
         self.nav_bar.item(0).setText(STRINGS[lang_code]['nav_welcome'])
         self.nav_bar.item(1).setText(STRINGS[lang_code]['nav_diary'])
         self.nav_bar.item(2).setText(STRINGS[lang_code]['nav_super_text'])
         self.nav_bar.item(3).setText(STRINGS[lang_code]['nav_file_encrypt'])
         self.nav_bar.item(4).setText(STRINGS[lang_code]['nav_stegano'])
         self.nav_bar.item(5).setText(STRINGS[lang_code]['nav_settings'])
-        # Index 7 karena index 6 itu spacer
         self.nav_bar.item(7).setText(STRINGS[lang_code]['nav_logout'])
 
     def retranslate_ui(self, lang_code):
@@ -284,19 +279,16 @@ class SuperTextWidget(QWidget):
     def _init_ui(self):
         layout = QVBoxLayout(self)
         
-        # 1. Main Title (Disimpan sebagai atribut)
         self.super_title_label = QLabel() 
         layout.addWidget(self.super_title_label) 
 
         form_layout = QFormLayout()
         
-        # 2. Semua Label Form dibuat sebagai atribut
         self.shift_label = QLabel() 
         self.key_label = QLabel()  
         self.plain_label = QLabel()
         self.cipher_label = QLabel()
         
-        # Input Fields
         self.super_plain = QTextEdit()
         self.super_plain.setPlaceholderText("Tulis plaintext di sini...")
         self.super_cipher = QTextEdit()
@@ -305,17 +297,14 @@ class SuperTextWidget(QWidget):
         self.super_shift.setValidator(QIntValidator())
         self.super_key = QLineEdit("kunci rahasia")
         
-        # Tata Letak Form (menggunakan atribut label yang baru)
         form_layout.addRow(self.shift_label, self.super_shift)
         form_layout.addRow(self.key_label, self.super_key)
         
         layout.addLayout(form_layout)
         
-        # Plaintext Section (menggunakan atribut label yang baru)
         layout.addWidget(self.plain_label)
         layout.addWidget(self.super_plain)
         
-        # Button Section
         btn_layout = QHBoxLayout()
         self.super_encrypt_btn = QPushButton("↓ Enkripsi ↓") 
         self.super_encrypt_btn.setStyleSheet("background-color: #28a745; color: white;")
@@ -329,7 +318,6 @@ class SuperTextWidget(QWidget):
         
         layout.addLayout(btn_layout)
         
-        # Ciphertext Section (menggunakan atribut label yang baru)
         layout.addWidget(self.cipher_label)
         layout.addWidget(self.super_cipher)
 
@@ -337,20 +325,17 @@ class SuperTextWidget(QWidget):
         """Update semua teks di widget ini."""
         strings = STRINGS[lang_code]
         
-        # Update ALL Labels
         self.super_title_label.setText(strings['super_title']) 
         self.shift_label.setText(strings['super_shift_label']) 
         self.key_label.setText(strings['super_key_label'])    
         self.plain_label.setText(strings['super_plain_label'])
         self.cipher_label.setText(strings['super_cipher_label'])
         
-        # Update Placeholders & Buttons
         self.super_plain.setPlaceholderText(strings['super_plain_ph'])
         self.super_cipher.setPlaceholderText(strings['super_cipher_ph'])
         self.super_encrypt_btn.setText(strings['super_btn_encrypt'])
         self.super_decrypt_btn.setText(strings['super_btn_decrypt'])
 
-    # Fungsi Logic (JANGAN DIUBAH) 
 
     def _get_super_params(self):
         try:
@@ -410,11 +395,9 @@ class FileEncryptorWidget(QWidget):
         layout = QVBoxLayout(self)
         layout.setSpacing(15)
         
-        # 1. Main Title (sekarang jadi atribut self)
         self.file_title_label = QLabel() 
         layout.addWidget(self.file_title_label)
         
-        # 2. Label & Buttons (sekarang jadi atribut self)
         self.file_path_label = QLabel("File belum dipilih.") 
         layout.addWidget(self.file_path_label)
         
@@ -543,13 +526,10 @@ class SteganographyWidget(QWidget):
         output_path, _ = QFileDialog.getSaveFileName(self, "Simpan Stego-Image", "stego_output.png", "PNG Files (*.png)")
         if not output_path: return
         
-        # 1. Enkrip dulu pesannya pake AES
         payload_bytes, nonce, tag = crypto_utils.encrypt_aes_gcm_single(plaintext_payload, self.master_key)
         
-        # 2. Gabung (nonce + tag + ciphertext) jadi satu payload besar
         final_payload_bytes = nonce + tag + payload_bytes
         
-        # 3. Sembunyikan (embed) payload besar ini
         success, msg = crypto_utils.embed_lsb(self.stego_cover_path, final_payload_bytes, output_path)
         QMessageBox.information(self, "Steganografi Embed", msg)
 
@@ -600,7 +580,6 @@ class WelcomeWidget(QWidget):
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignCenter)
 
-        # Ganti Teks Statis jadi Variabel Class
         self.welcome_label = QLabel()
         self.welcome_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.welcome_label)
@@ -639,7 +618,7 @@ class WelcomeWidget(QWidget):
         self.view_files_btn.setText(STRINGS[lang_code]['welcome_btn_view_files'])
 
 class SettingsWidget(QWidget):
-    language_changed = pyqtSignal(str) # Signal untuk kirim bahasa baru
+    language_changed = pyqtSignal(str) 
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -655,7 +634,6 @@ class SettingsWidget(QWidget):
         self.title_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.title_label)
 
-        # --- Dark Mode ---
         self.dark_mode_toggle = QPushButton()
         self.dark_mode_toggle.setCheckable(True)
         self.dark_mode_toggle.setStyleSheet("background-color: #6c757d; color: white; padding: 10px; border-radius: 5px;")
@@ -663,7 +641,6 @@ class SettingsWidget(QWidget):
 
         layout.addSpacing(20) 
 
-        # --- Language Selector ---
         self.lang_label = QLabel()
         self.lang_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.lang_label)
@@ -679,7 +656,7 @@ class SettingsWidget(QWidget):
     def _on_lang_change(self, text_display):
         """Fungsi BARU: Kirim signal pas combo box diganti"""
         lang_code = self.lang_combo.currentData()
-        print(f"Bahasa diganti ke: {lang_code}") # Debug
+        print(f"Bahasa diganti ke: {lang_code}") 
         self.language_changed.emit(lang_code)
 
     def retranslate_ui(self, lang_code, is_dark):
@@ -687,13 +664,11 @@ class SettingsWidget(QWidget):
         self.title_label.setText(STRINGS[lang_code]['settings_title'])
         self.lang_label.setText(STRINGS[lang_code]['settings_lang_label'])
 
-        # Update teks tombol dark mode
         if is_dark:
             self.dark_mode_toggle.setText(STRINGS[lang_code]['settings_dark_mode_off'])
         else:
             self.dark_mode_toggle.setText(STRINGS[lang_code]['settings_dark_mode_on'])
 
-# --- Main Application Window ---
 
 class MainWindow(QMainWindow):
     logout_signal = pyqtSignal()
@@ -704,8 +679,8 @@ class MainWindow(QMainWindow):
         self.user_id = user_id
         self.master_key = master_key
         self.username = username
-        self.current_lang = 'id' # Default bahasa
-        self.current_theme = 'light' # Default theme
+        self.current_lang = 'id' 
+        self.current_theme = 'light' 
 
         self.setWindowTitle('Crypto Diary - Menu Utama')
         self.setGeometry(100, 100, 1000, 700)
@@ -717,14 +692,12 @@ class MainWindow(QMainWindow):
 
 
     def _init_ui(self):
-        # Container utama
         main_container = QWidget()
         self.setCentralWidget(main_container)
 
         main_layout = QHBoxLayout(main_container)
         main_layout.setContentsMargins(0, 0, 0, 0) 
 
-        # --- Side Navigation Bar ---
         self.nav_bar = QListWidget()
         self.nav_bar.setFixedWidth(200) 
         self.nav_bar.setStyleSheet("""
@@ -749,26 +722,24 @@ class MainWindow(QMainWindow):
             }
         """)
 
-        # Tambah item menu
-        self.nav_bar.addItem(QListWidgetItem(QIcon("icons/home.png"), "Welcome")) # Index 0
-        self.nav_bar.addItem(QListWidgetItem(QIcon("icons/diary.png"), "Diary Pribadi")) # Index 1
-        self.nav_bar.addItem(QListWidgetItem(QIcon("icons/text.png"), "Teks Super")) # Index 2
-        self.nav_bar.addItem(QListWidgetItem(QIcon("icons/file.png"), "Enkripsi File")) # Index 3
-        self.nav_bar.addItem(QListWidgetItem(QIcon("icons/image.png"), "Steganografi")) # Index 4
-        self.nav_bar.addItem(QListWidgetItem(QIcon("icons/settings.png"), "Pengaturan")) # Index 5
+        self.nav_bar.addItem(QListWidgetItem(QIcon("icons/home.png"), "Welcome")) 
+        self.nav_bar.addItem(QListWidgetItem(QIcon("icons/diary.png"), "Diary Pribadi")) 
+        self.nav_bar.addItem(QListWidgetItem(QIcon("icons/text.png"), "Teks Super")) 
+        self.nav_bar.addItem(QListWidgetItem(QIcon("icons/file.png"), "Enkripsi File")) 
+        self.nav_bar.addItem(QListWidgetItem(QIcon("icons/image.png"), "Steganografi")) 
+        self.nav_bar.addItem(QListWidgetItem(QIcon("icons/settings.png"), "Pengaturan")) 
 
         spacer_item = QListWidgetItem()
         spacer_item.setFlags(spacer_item.flags() & ~Qt.ItemIsSelectable & ~Qt.ItemIsEnabled)
-        self.nav_bar.addItem(spacer_item) # Spacer (Index 6)
+        self.nav_bar.addItem(spacer_item) 
 
-        logout_item = QListWidgetItem(QIcon("icons/logout.png"), "Logout") # Index 7
+        logout_item = QListWidgetItem(QIcon("icons/logout.png"), "Logout") 
         logout_item.setForeground(QColor("#dc3545")) 
         self.nav_bar.addItem(logout_item)
 
         self.nav_bar.itemClicked.connect(self._handle_nav_click)
         main_layout.addWidget(self.nav_bar)
 
-        # --- Stacked Widget (Konten Utama) ---
         self.stacked_widget = QStackedWidget()
         main_layout.addWidget(self.stacked_widget)
 
@@ -781,15 +752,13 @@ class MainWindow(QMainWindow):
         self.settings_page = SettingsWidget() 
         self.settings_page.setObjectName("SettingsWidget")
 
-        # Tambahkan ke stacked widget
-        self.stacked_widget.addWidget(self.welcome_page) # Index 0
-        self.stacked_widget.addWidget(self.diary_page)    # Index 1
-        self.stacked_widget.addWidget(self.super_text_page) # Index 2
-        self.stacked_widget.addWidget(self.file_encryptor_page) # Index 3
-        self.stacked_widget.addWidget(self.steganography_page) # Index 4
-        self.stacked_widget.addWidget(self.settings_page) # Index 5
+        self.stacked_widget.addWidget(self.welcome_page) 
+        self.stacked_widget.addWidget(self.diary_page)   
+        self.stacked_widget.addWidget(self.super_text_page) 
+        self.stacked_widget.addWidget(self.file_encryptor_page) 
+        self.stacked_widget.addWidget(self.steganography_page) 
+        self.stacked_widget.addWidget(self.settings_page) 
 
-        # --- Sambungin Signal Fitur Baru ---
         self.settings_page.dark_mode_toggle.clicked.connect(self._toggle_dark_mode)
         self.settings_page.language_changed.connect(self._on_language_change)
 
@@ -802,7 +771,6 @@ class MainWindow(QMainWindow):
 
         self.nav_bar.setCurrentRow(0)
 
-    # --- FUNGSI NAVIGASI DAN LOGOUT ---
 
     def _handle_nav_click(self, item):
         """
@@ -821,7 +789,6 @@ class MainWindow(QMainWindow):
                 self.stacked_widget.setCurrentIndex(row)
 
     def _do_logout(self):
-        # Ambil teks terjemahan
         title = STRINGS[self.current_lang]['confirm_logout']
         msg = STRINGS[self.current_lang]['confirm_logout_msg']
 
@@ -831,7 +798,6 @@ class MainWindow(QMainWindow):
             self.logout_signal.emit() 
             self.close() 
 
-    # --- FUNGSI TRANSLATION ---
 
     def _on_language_change(self, lang_code):
         self.current_lang = lang_code
@@ -856,9 +822,8 @@ class MainWindow(QMainWindow):
         self.nav_bar.item(3).setText(strings['nav_file_encrypt'])
         self.nav_bar.item(4).setText(strings['nav_stegano'])
         self.nav_bar.item(5).setText(strings['nav_settings'])
-        self.nav_bar.item(7).setText(strings['nav_logout']) # Index 7 krn index 6 itu spacer
+        self.nav_bar.item(7).setText(strings['nav_logout']) 
 
-    # --- FUNGSI THEME ---
 
     def _toggle_dark_mode(self):
         is_dark_toggled_on = self.settings_page.dark_mode_toggle.isChecked()
@@ -870,7 +835,6 @@ class MainWindow(QMainWindow):
         
         self._apply_theme(new_theme)
         self.current_theme = new_theme
-        # Update teks tombol di Settings
         self.settings_page.retranslate_ui(self.current_lang, is_dark_toggled_on)
         
         
@@ -927,7 +891,7 @@ class MainWindow(QMainWindow):
                     border-radius: 3px; 
                 }
             """)
-        else: # Light theme
+        else: 
             palette = QApplication.instance().palette() 
             self.setStyleSheet("") 
             palette.setColor(QPalette.Window, QColor(240, 240, 240))
@@ -958,7 +922,7 @@ class MainWindow(QMainWindow):
 
 def _on_language_change(self, lang_code):
     """Dipanggil pas signal dari SettingsWidget keterima"""
-    print(f"MAIN: Bahasa diganti ke: {lang_code}") # Debug
+    print(f"MAIN: Bahasa diganti ke: {lang_code}") 
     self.current_lang = lang_code
     self.retranslate_ui(lang_code) 
 
@@ -973,10 +937,9 @@ def retranslate_ui(self, lang_code):
     self.nav_bar.item(3).setText(STRINGS[lang_code]['nav_file_encrypt'])
     self.nav_bar.item(4).setText(STRINGS[lang_code]['nav_stegano'])
     self.nav_bar.item(5).setText(STRINGS[lang_code]['nav_settings'])
-    self.nav_bar.item(7).setText(STRINGS[lang_code]['nav_logout']) # Index 7 krn ada spacer
+    self.nav_bar.item(7).setText(STRINGS[lang_code]['nav_logout']) 
 
 def _do_logout(self):
-    # Ambil teks terjemahan
     title = STRINGS[self.current_lang]['confirm_logout']
     msg = STRINGS[self.current_lang]['confirm_logout_msg']
 
@@ -999,14 +962,12 @@ def _toggle_dark_mode(self):
     self.settings_page.retranslate_ui(self.current_lang, is_dark_toggled_on)
         
     def _init_ui(self):
-        # Container utama
         main_container = QWidget()
         self.setCentralWidget(main_container)
         
         main_layout = QHBoxLayout(main_container)
         main_layout.setContentsMargins(0, 0, 0, 0) 
 
-        # --- Side Navigation Bar ---
         self.nav_bar = QListWidget()
         self.nav_bar.setFixedWidth(200) 
         self.nav_bar.setStyleSheet("""
@@ -1048,7 +1009,6 @@ def _toggle_dark_mode(self):
         self.nav_bar.itemClicked.connect(self._handle_nav_click)
         main_layout.addWidget(self.nav_bar)
 
-        # --- Stacked Widget (Konten Utama) ---
         self.stacked_widget = QStackedWidget()
         main_layout.addWidget(self.stacked_widget)
 
@@ -1062,14 +1022,14 @@ def _toggle_dark_mode(self):
 
         self.settings_page = SettingsWidget() 
 
-        self.stacked_widget.addWidget(self.welcome_page) # Index 0
-        self.stacked_widget.addWidget(self.diary_page)    # Index 1
-        self.stacked_widget.addWidget(self.super_text_page) # Index 2
-        self.stacked_widget.addWidget(self.file_encryptor_page) # Index 3
-        self.stacked_widget.addWidget(self.steganography_page) # Index 4
-        self.stacked_widget.addWidget(self.settings_page) # Index 5
+        self.stacked_widget.addWidget(self.welcome_page) 
+        self.stacked_widget.addWidget(self.diary_page)   
+        self.stacked_widget.addWidget(self.super_text_page) 
+        self.stacked_widget.addWidget(self.file_encryptor_page) 
+        self.stacked_widget.addWidget(self.steganography_page) 
+        self.stacked_widget.addWidget(self.settings_page) 
 
-        # Hubungkan tombol dark mode
+        
         self.settings_page.dark_mode_toggle.clicked.connect(self._toggle_dark_mode)
         self.welcome_page.new_diary_btn.clicked.connect(
             lambda: self.nav_bar.setCurrentRow(1) 
@@ -1108,11 +1068,7 @@ def _toggle_dark_mode(self):
             self.close() 
 
     def _on_language_change(self, lang_code):
-        """
-        FIX 3: Ini fungsi yang ilang buat nerima signal ganti bahasa.
-        Ini yang ngebenerin bug 'Welcome' & 'Settings' kosong.
-        """
-        print(f"MAIN: Bahasa diganti ke: {lang_code}") # Debug
+        print(f"MAIN: Bahasa diganti ke: {lang_code}")
         self.current_lang = lang_code
         self.retranslate_ui(lang_code) 
         
@@ -1120,14 +1076,12 @@ def _toggle_dark_mode(self):
         self.settings_page.retranslate_ui(lang_code, self.current_theme == 'dark')
 
     def retranslate_ui(self, lang_code):
-        # Nerjemahin Navigasi Bar
         self.nav_bar.item(0).setText(STRINGS[lang_code]['nav_welcome'])
         self.nav_bar.item(1).setText(STRINGS[lang_code]['nav_diary'])
         self.nav_bar.item(2).setText(STRINGS[lang_code]['nav_super_text'])
         self.nav_bar.item(3).setText(STRINGS[lang_code]['nav_file_encrypt'])
         self.nav_bar.item(4).setText(STRINGS[lang_code]['nav_stegano'])
         self.nav_bar.item(5).setText(STRINGS[lang_code]['nav_settings'])
-        # Index 7 karena index 6 itu spacer
         self.nav_bar.item(7).setText(STRINGS[lang_code]['nav_logout'])
 
     def _toggle_dark_mode(self):
@@ -1183,7 +1137,6 @@ def _toggle_dark_mode(self):
     def _apply_theme(self, theme_name):
         palette = QPalette()
         if theme_name == 'dark':
-            # --- DARK THEME SETTINGS ---
             palette.setColor(QPalette.Window, QColor(53, 53, 53))
             palette.setColor(QPalette.WindowText, QColor(255, 255, 255))
             palette.setColor(QPalette.Base, QColor(25, 25, 25))
@@ -1196,7 +1149,6 @@ def _toggle_dark_mode(self):
             palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
             palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
             
-            # CSS untuk Dark Theme
             self.setStyleSheet("""
                 QMainWindow { background-color: #343a40; }
                 QWidget { color: white; } /* Font putih untuk Dark Mode */

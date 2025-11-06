@@ -5,14 +5,10 @@ from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 from PIL import Image
 
-# --- BAGIAN 1: AUTENTIKASI & KEY DERIVATION ---
-
 def generate_salt(size=16):
     return os.urandom(size)
 
 def hash_password(password, salt, iterations=100000):
-    # password.encode('utf-8') -> ubah string jadi bytes
-    # dklen=32 -> minta output hash 32 bytes (256 bits)
     return hashlib.pbkdf2_hmac(
         'sha256', 
         password.encode('utf-8'), 
@@ -40,19 +36,15 @@ def encrypt_aes_gcm_entry(title_str, content_str, key):
     Mengembalikan tuple: (title_bytes, content_bytes, nonce_bytes, tag_bytes)
     """
     try:
-        # 1. Ubah DULU semua string jadi bytes
         title_bytes = title_str.encode('utf-8')
         content_bytes = content_str.encode('utf-8')
         
-        # 2. Buat SATU cipher. Ini akan nge-generate SATU nonce
         cipher = AES.new(key, AES.MODE_GCM)
         nonce = cipher.nonce
         
-        # 3. Enkripsi keduanya secara berurutan
         title_blob = cipher.encrypt(title_bytes)
         content_blob = cipher.encrypt(content_bytes)
         
-        # 4. Ambil SATU tag untuk *seluruh* operasi
         tag = cipher.digest()
         
         return (title_blob, content_blob, nonce, tag)
@@ -63,14 +55,11 @@ def encrypt_aes_gcm_entry(title_str, content_str, key):
 
 def decrypt_aes_gcm_entry(title_bytes, content_bytes, key, nonce_bytes, tag_bytes):
     try:
-        # 1. Buat ulang cipher-nya PAKE nonce yg tersimpan
         cipher = AES.new(key, AES.MODE_GCM, nonce=nonce_bytes)
         
-        # 2. Dekripsi keduanya
         title_str = cipher.decrypt(title_bytes).decode('utf-8')
         content_str = cipher.decrypt(content_bytes).decode('utf-8')
         
-        # 3. VERIFIKASI tag-nya di akhir
         cipher.verify(tag_bytes)
         
         return (title_str, content_str)
@@ -110,17 +99,12 @@ def _caesar_cipher(text, shift, mode='encrypt'):
         
     for char in text:
         if 'a' <= char <= 'z':
-            # Rumus: C = (P + k) mod 26
-            # ord('a') = 97
             new_ord = (ord(char) - ord('a') + shift) % 26 + ord('a')
             result += chr(new_ord)
         elif 'A' <= char <= 'Z':
-            # Rumus yg sama untuk huruf besar
-            # ord('A') = 65
             new_ord = (ord(char) - ord('A') + shift) % 26 + ord('A')
             result += chr(new_ord)
         else:
-            # Kalo bukan huruf (spasi, angka, simbol), biarin aja
             result += char
     return result
 
@@ -131,11 +115,9 @@ def _xor_cipher(text_bytes, key_str):
     
     result_bytes = bytearray()
     
-    # Loop sebanyak bytes di teks
     for i in range(len(text_bytes)):
         key_byte = key_bytes[i % key_len]
         
-        # Operasi XOR (simbol ^)
         xor_byte = text_bytes[i] ^ key_byte
         result_bytes.append(xor_byte)
         
@@ -143,13 +125,10 @@ def _xor_cipher(text_bytes, key_str):
 
 def encrypt_caesar_xor(plaintext_str, shift, xor_key_str):
     try:
-        # Layer 1: Caesar Cipher (String -> String)
         caesar_result_str = _caesar_cipher(plaintext_str, shift, mode='encrypt')
         
-        # Ubah hasil Caesar (string) jadi bytes untuk di-XOR
         caesar_result_bytes = caesar_result_str.encode('utf-8')
         
-        # Layer 2: XOR (Bytes -> Bytes)
         final_ciphertext_bytes = _xor_cipher(caesar_result_bytes, xor_key_str)
         
         return final_ciphertext_bytes
@@ -159,13 +138,10 @@ def encrypt_caesar_xor(plaintext_str, shift, xor_key_str):
 
 def decrypt_caesar_xor(ciphertext_bytes, shift, xor_key_str):
     try:
-        # Layer 1: Balikin XOR (Bytes -> Bytes)
         xor_decrypted_bytes = _xor_cipher(ciphertext_bytes, xor_key_str)
         
-        # Ubah hasil dekripsi XOR (bytes) jadi string
         xor_decrypted_str = xor_decrypted_bytes.decode('utf-8')
         
-        # Layer 2: Balikin Caesar (String -> String)
         final_plaintext_str = _caesar_cipher(xor_decrypted_str, shift, mode='decrypt')
         
         return final_plaintext_str
@@ -176,27 +152,20 @@ def decrypt_caesar_xor(ciphertext_bytes, shift, xor_key_str):
         print(f"Error dekripsi Caesar+XOR: {e}")
         return None
 
-# Ukuran block Blowfish adalah 8 bytes (64-bit)
 BLOWFISH_BLOCK_SIZE = 8
 
 def encrypt_file_blowfish(filepath, key, output_path):
     try:
-        # 1. Buat cipher Blowfish baru pake mode CBC
-        #    Kita generate IV acak 8-byte
         cipher = Blowfish.new(key, Blowfish.MODE_CBC)
-        iv = cipher.iv  # Ambil IV 8-byte yg di-generate
+        iv = cipher.iv  
         
-        # 2. Buka file input (plaintext) untuk dibaca 'rb' (read binary)
         with open(filepath, 'rb') as f_in:
             plaintext = f_in.read()
             
-        # 3. Lakukan padding pada plaintext
         padded_plaintext = pad(plaintext, BLOWFISH_BLOCK_SIZE)
         
-        # 4. Enkripsi data
         ciphertext = cipher.encrypt(padded_plaintext)
         
-        # 5. Tulis ke file output 'wb' (write binary)
         with open(output_path, 'wb') as f_out:
             f_out.write(iv)
             f_out.write(ciphertext)
@@ -208,31 +177,21 @@ def encrypt_file_blowfish(filepath, key, output_path):
         return False, f"Error: {e}"
 
 def decrypt_file_blowfish(encrypted_filepath, key, output_path):
-    """
-    Dekripsi file Blowfish-CBC (yg formatnya: [ 8 bytes IV ] [ ... ciphertext ... ])
-    """
     try:
-        # 1. Buka file terenkripsi 'rb' (read binary)
         with open(encrypted_filepath, 'rb') as f_in:
-            # 2. Baca 8 bytes PERTAMA sebagai IV
             iv = f_in.read(BLOWFISH_BLOCK_SIZE)
             
-            # 3. Baca sisa file-nya sebagai ciphertext
             ciphertext = f_in.read()
 
-        # 4. Buat ulang cipher-nya, PAKE key dan IV yg tadi kita baca
         cipher = Blowfish.new(key, Blowfish.MODE_CBC, iv=iv)
         
-        # 5. Dekripsi ciphertext
         decrypted_padded_plaintext = cipher.decrypt(ciphertext)
         
-        # 6. Hapus padding dari hasil dekripsi
         try:
             plaintext = unpad(decrypted_padded_plaintext, BLOWFISH_BLOCK_SIZE)
         except ValueError:
             return False, "Error: Kunci salah atau file korup (padding invalid)."
 
-        # 7. Tulis plaintext (hasil akhir) ke file output
         with open(output_path, 'wb') as f_out:
             f_out.write(plaintext)
             
@@ -242,34 +201,26 @@ def decrypt_file_blowfish(encrypted_filepath, key, output_path):
         print(f"Error dekripsi file Blowfish: {e}")
         return False, f"Error: {e}"
 
-# --- BAGIAN 5: Steganografi (LSB) ---
 
 def _int_to_bytes(n):
-    """Ubah integer (panjang data) jadi 4 bytes (32-bit)."""
     return n.to_bytes(4, 'big')
 
 def _bytes_to_int(b):
-    """Ubah 4 bytes (header) balik jadi integer."""
     return int.from_bytes(b, 'big')
 
 def _data_to_bits(data_bytes):
-    """
-    Ubah stream bytes (misal: b'abc') jadi iterator bit 
-    (misal: 0,1,1,0,0,0,0,1, 0,1,1,0,0,0,1,0, ...)
-    """
     for byte in data_bytes:
         for bit in format(byte, '08b'):
             yield int(bit) 
 
 def _modify_pixel_lsb(pixel_tuple, bit):
-    val = pixel_tuple[0] # Ambil nilai R
+    val = pixel_tuple[0] 
     
     new_val = (val & 254) | bit
     
-    # Kembalikan tuple piksel baru
-    if len(pixel_tuple) == 4: # RGBA
+    if len(pixel_tuple) == 4:
         return (new_val, pixel_tuple[1], pixel_tuple[2], pixel_tuple[3])
-    else: # RGB
+    else: 
         return (new_val, pixel_tuple[1], pixel_tuple[2])
 
 def _extract_pixel_lsb(pixel_tuple):
@@ -278,27 +229,22 @@ def _extract_pixel_lsb(pixel_tuple):
 
 def embed_lsb(image_path, payload_bytes, output_path):
     try:
-        # 1. Buka gambar
         img = Image.open(image_path).convert('RGBA') 
         width, height = img.size
         pixels = img.load()
         
-        # 2. Siapin data yg mau disembunyiin
         payload_len = len(payload_bytes)
         len_header_bytes = _int_to_bytes(payload_len) 
         
         data_to_embed = len_header_bytes + payload_bytes
         total_bits_to_embed = len(data_to_embed) * 8
         
-        # 3. Cek kapasitas gambar
         max_bits = width * height
         if total_bits_to_embed > max_bits:
             return False, f"Error: Gambar terlalu kecil. Butuh {total_bits_to_embed} bits, tersedia {max_bits}."
 
-        # 4. Buat bit iterator
         bit_stream = _data_to_bits(data_to_embed)
         
-        # 5. Mulai proses embedding
         bit_count = 0
         for y in range(height):
             for x in range(width):
@@ -308,13 +254,10 @@ def embed_lsb(image_path, payload_bytes, output_path):
                     except StopIteration:
                         break 
                     
-                    # Ambil piksel asli
                     current_pixel = pixels[x, y]
                     
-                    # Modifikasi LSB-nya
                     new_pixel = _modify_pixel_lsb(current_pixel, bit_to_embed)
                     
-                    # Taruh piksel baru ke gambar
                     pixels[x, y] = new_pixel
                     bit_count += 1
                 else:
@@ -322,7 +265,6 @@ def embed_lsb(image_path, payload_bytes, output_path):
             if bit_count >= total_bits_to_embed:
                 break 
         
-        # 6. Simpan gambar baru
         img.save(output_path, "PNG")
         img.close()
         return True, f"Pesan berhasil disembunyikan di {output_path}"
@@ -340,7 +282,6 @@ def extract_lsb(stego_image_path):
         
         extracted_bits = []
         
-        # --- Fase 1: Ekstrak Header (32 bits / 4 bytes) ---
         for y in range(height):
             for x in range(width):
                 if len(extracted_bits) < 32: 
@@ -351,7 +292,6 @@ def extract_lsb(stego_image_path):
             if len(extracted_bits) >= 32:
                 break
         
-        # Ubah 32 bits pertama jadi bytes, lalu jadi integer
         header_bytes = b""
         for i in range(0, 32, 8):
             byte_str = "".join(map(str, extracted_bits[i:i+8]))
@@ -360,7 +300,6 @@ def extract_lsb(stego_image_path):
         payload_len = _bytes_to_int(header_bytes)
         total_bits_to_read = 32 + (payload_len * 8) 
         
-        # --- Fase 2: Ekstrak sisa data (Payload) ---
         for y in range(height):
             for x in range(width):
                 pixel_index = (y * width) + x
@@ -378,7 +317,6 @@ def extract_lsb(stego_image_path):
         if len(extracted_bits) < total_bits_to_read:
             return None, "Error: Ekstraksi gagal, data tidak lengkap (mungkin bukan stego-image)."
 
-        # --- Fase 3: Konversi bit-stream jadi bytes ---
         payload_bits = extracted_bits[32:]
         payload_bytes = b""
         

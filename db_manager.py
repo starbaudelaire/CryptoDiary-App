@@ -123,7 +123,6 @@ def delete_diary_entry(entry_id):
     except Exception as e:
         return False, f"Gagal menghapus catatan: {e}"
 
-# --- Tes Sederhana (opsional, bisa dihapus nanti) ---
+# Tes  
 if __name__ == "__main__":
     init_db() 
-    # Coba cek, file 'crypto_diary.db' harusnya muncul di folder lu.
