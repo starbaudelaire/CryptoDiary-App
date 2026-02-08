@@ -1,10 +1,22 @@
-# Database
-*.db
-
-# Python cache
+# --- Python Safety ---
 __pycache__/
-*.pyc
-
-# Virtual Environment
-.venv/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
 venv/
+
+# --- Database & Logs ---
+*.db
+*.sqlite3
+*.log
+data/*.db
+
+# --- OS Junk ---
+.DS_Store
+Thumbs.db
+
+# --- IDE Settings ---
+.vscode/
+.idea/
